@@ -14,7 +14,7 @@ class URLRepository:
             self.db.refresh(url_mapping)
 
             return url_mapping
-        except Exception as e:
+        except Exception:
             self.db.rollback()
             raise
 
