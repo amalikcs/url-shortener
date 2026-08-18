@@ -13,6 +13,7 @@ class URLMapping(Base):
     id = Column(Integer, primary_key=True)
     original_url = Column(String(2048), nullable=False)
     short_code = Column(String(10), unique=True, nullable=False, index=True)
+    click_count = Column(Integer, default=0, nullable=False)
     created_at = Column(DateTime(timezone=True),
                         server_default=func.now(),
                         nullable=False)

@@ -27,3 +27,15 @@ class URLRepository:
         return self.db.query(URLMapping) \
                 .filter(URLMapping.original_url == original_url) \
                 .first()
+
+    def increment_click_count(self, url_mapping: URLMapping) -> URLMapping:
+
+        url_mapping.click_count += 1
+        try:
+            self.db.commit()
+            self.db.refresh(url_mapping)
+        except Exception:
+            self.db.rollback()
+            raise
+        return url_mapping
+

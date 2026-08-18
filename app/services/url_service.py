@@ -2,6 +2,7 @@ import secrets
 import string
 
 from app.repositories.url_repository import URLRepository
+from app.models.urls import URLMapping
 
 
 class URLService:
@@ -61,10 +62,25 @@ class URLService:
         return result
 
     def get_original_url(self, short_code: str) -> str:
+
         url_mapping = self.repository.get_by_short_code(short_code)
 
         if not url_mapping:
             raise ValueError(
                 f"Short code '{short_code}' not found"
             )
+        try:
+            self.repository.increment_click_count(url_mapping)
+        except Exception:
+            pass
         return url_mapping.original_url
+
+    def get_url_stats(self, short_code: str) -> URLMapping:
+        url_mapping = self.repository.get_by_short_code(short_code)
+        if not url_mapping:
+            raise ValueError(
+                    f"Short code '{short_code}' not found"
+                )
+        return url_mapping
+
+   
