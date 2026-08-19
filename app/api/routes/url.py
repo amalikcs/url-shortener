@@ -1,20 +1,25 @@
+import logging
 from fastapi import APIRouter, Depends
 from fastapi.responses import RedirectResponse
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from app.schemas.url import URLCreate, URLResponse, URLStatsResponse
+from app.schemas.url import URLCreate, URLResponse, URLStatsResponse, URLInfo
 from app.db.db import get_db
 
 from app.repositories.url_repository import URLRepository
 from app.services.url_service import URLService
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/urls", tags=["urls"])
 
-@router.get("/")
-def get_urls():
-    return {"message": "List of URLs"}
-
+@router.get("/", response_model=list[URLInfo], status_code=200)
+def get_urls(db: Session = Depends(get_db)):
+    repository = URLRepository(db)
+    service = URLService(repository)
+    all_urls = service.get_all_urls()
+    return all_urls
 
 @router.post("/", response_model=URLResponse, status_code=201)
 def create_url(url: URLCreate, 
@@ -22,7 +27,6 @@ def create_url(url: URLCreate,
     
     repository = URLRepository(db)
     service = URLService(repository)
-
     return service.create_url(original_url=str(url.original_url))
 
 @router.get("/short/{short_code}")
@@ -46,6 +50,7 @@ def get_url_stats(short_code: str,
     try:
         url_mapping = service.get_url_stats(short_code=short_code)
     except ValueError as e:
+        logger.warning(f"Error fetching stats for short code '{short_code}': {e}")
         raise HTTPException(status_code=404, detail=str(e))
 
     return URLStatsResponse(
@@ -65,6 +70,7 @@ def redirect_to_original_url(short_code: str,
     try:
         original_url = service.get_original_url(short_code=short_code)
     except ValueError as e:
+        logger.warning(f"Error redirecting for short code '{short_code}': {e}")
         raise HTTPException(status_code=404, detail=str(e))
 
     return RedirectResponse(url=original_url, status_code=302)

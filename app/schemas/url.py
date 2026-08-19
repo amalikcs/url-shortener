@@ -19,6 +19,7 @@ class URLInfo(BaseModel):
     id: int
     original_url: HttpUrl
     short_code: str
+    click_count: int
     created_at: datetime
 
     class Config:
